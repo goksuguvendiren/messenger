@@ -5,7 +5,7 @@ import urllib2, json
 from messenger import Messenger
 
 ListeningPort = 6666
-SendingPort = 5555
+SendingPort = 6666
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(('', ListeningPort))
@@ -14,7 +14,6 @@ s.bind(('', ListeningPort))
 USERS = {'server' : '178.62.156.238', 'fatih' : 'fatih', 'goksu' : '127.0.0.1' }
 
 class Object:
-	@staticmethod
 	def to_JSON(self):
 		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
@@ -81,23 +80,34 @@ class Socket:
 
 class Functions:
 	@staticmethod	
-	def findSender(data):
-		return data[1]
+	def findSender(listenedData):
+		return listenedData[1]
+
+	@staticmethod
+	def findContent(listenedData):
+		return listenedData[0]
 	
 	@staticmethod
-	def findContent(data):
-		return data[0]
+	def findContentOfMessage(rawData):
+		newData = rawData.split(' ')
+		print newData
+		if len(newData) < 2:
+			print "Invalid operator"
+		else :
+			Data = newData[2:]
+			print Data
+			return Data
 	
 	@staticmethod	
-	def findCommand(data):
-		content = Functions.findContent(data)
-		result = content.split(' ')
+	def findCommand(rawData):
+		result = rawData.split(' ')
 		command = result[0]
+		print command
 		return command
 	
 	@staticmethod
 	def printMessage(data):
-		content = Functions.findContent
+		content = self.findContentOfMessage(data)
 		print content
 	
 	@staticmethod
@@ -105,12 +115,12 @@ class Functions:
 		senderIP = Functions.findSender(data)
 		sender = Functions.findUserByIP(senderIP)
 		Socket.SendTo(senderIP, sender.username + " wants to add you !\n")
-		Socket.SendTo(senderIP, "if you want to accept, print 'accept', otherwise, print 'decline'.")
+		Socket.SendTo(senderIP, "if you want to accept, say 'accept', otherwise, say 'decline'.")
 	
 	@staticmethod
 	def toUser(data):
-		ip = Functions.findSender
-		User.addFriend(ip)
+		ip = Functions.findSender(data)
+		User.addFriend(ip)	
 	
 	@staticmethod	
 	def getFatihsIP():
@@ -121,6 +131,18 @@ class Functions:
 		ip = page['ev']
 		print ip
 		return ip
+
+	@staticmethod
+	def backToJSON(rawData):
+		command = Functions.findCommand(rawData)
+		content = Functions.findContentOfMessage(rawData)
+
+		packet = Object()
+		packet.event = command
+		packet.subdata = Object()
+		packet.subdata.content = content
+
+		return packet.to_JSON()
 	
 	@staticmethod
 	def findUserByIP(ip):
@@ -129,7 +151,6 @@ class Functions:
 				return i
 		return False
 
-Messenger.AddListener("incomingMessage", Functions.findCommand)
 Messenger.AddListener("waitingFriend", Functions.toUser)
 Messenger.AddListener("waitingFriend", Functions.ask)
 
@@ -137,8 +158,3 @@ sock = Socket()
 
 ListeningThread = threading.Thread(name = 'LThread', target = sock.ListenTo)
 ListeningThread.start()
-
-while True:
-	data = raw_input()
-	
-	sock.SendTo("127.0.0.1", data)
