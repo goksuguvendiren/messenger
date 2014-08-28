@@ -13,6 +13,11 @@ s.bind(('', ListeningPort))
 #fatih = Functions.getFatihsIP()
 USERS = {'server' : '178.62.156.238', 'fatih' : 'fatih', 'goksu' : '127.0.0.1' }
 
+class Object:
+	@staticmethod
+	def to_JSON(self):
+		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
 class User:
 	friends = []
 	awaitingFriends = []
@@ -59,25 +64,20 @@ class User:
 		self.deleteAwaiting(ip)
 		print otherUser.username + "'s been declined !"
 
-	
-
 me = User('myself', '127.0.0.1')
 
 class Socket:
-	def ListenTo():
+	def ListenTo(self):
 		while True:
 			# receive data from client (data, addr)
 			data = s.recvfrom(1024)
-			content = d[0]
-			addr = d[1]
+			content = data[0]
+			addr = data[1]
+			print data
 			Messenger.BroadcastMessage("incomingMessage", data)
 
-	def SendTo(ip, message):     
-		s.sendto(msg, (ip, SendingPort))
-
-Messenger.AddListener("incomingMessage", Functions.findCommand)
-Messenger.AddListener("waitingFriend", Functions.toUser)
-Messenger.AddListener("waitingFriend", Functions.ask)
+	def SendTo(self, ip, message):     
+		s.sendto(message, (ip, SendingPort))
 
 class Functions:
 	@staticmethod	
@@ -90,7 +90,7 @@ class Functions:
 	
 	@staticmethod	
 	def findCommand(data):
-		content = findContent(data)
+		content = Functions.findContent(data)
 		result = content.split(' ')
 		command = result[0]
 		return command
@@ -128,8 +128,17 @@ class Functions:
 			if i.userIP == ip:
 				return i
 		return False
-		
 
-ListeningThread = threading.Thread(name = 'LThread', target = ListenTo)
+Messenger.AddListener("incomingMessage", Functions.findCommand)
+Messenger.AddListener("waitingFriend", Functions.toUser)
+Messenger.AddListener("waitingFriend", Functions.ask)
+
+sock = Socket()
+
+ListeningThread = threading.Thread(name = 'LThread', target = sock.ListenTo)
 ListeningThread.start()
-SendTo()
+
+while True:
+	data = raw_input()
+	
+	sock.SendTo("127.0.0.1", data)
