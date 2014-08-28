@@ -72,7 +72,7 @@ class Socket:
 			data = s.recvfrom(1024)
 			content = data[0]
 			addr = data[1]
-			print data
+			print "content budur" + content
 			Messenger.BroadcastMessage("incomingMessage", data)
 
 	def SendTo(self, ip, message):     
@@ -90,19 +90,16 @@ class Functions:
 	@staticmethod
 	def findContentOfMessage(rawData):
 		newData = rawData.split(' ')
-		print newData
 		if len(newData) < 2:
 			print "Invalid operator"
 		else :
-			Data = newData[2:]
-			print Data
+			Data = ' '.join(newData[2:])
 			return Data
 	
 	@staticmethod	
 	def findCommand(rawData):
 		result = rawData.split(' ')
 		command = result[0]
-		print command
 		return command
 	
 	@staticmethod
