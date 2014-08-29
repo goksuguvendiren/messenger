@@ -13,10 +13,6 @@ s.bind(('', ListeningPort))
 #fatih = Functions.getFatihsIP()
 USERS = {'server' : '178.62.156.238', 'fatih' : 'fatih', 'goksu' : '127.0.0.1' }
 
-class Object:
-	def to_JSON(self):
-		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
 class User:
 	friends = []
 	awaitingFriends = []
@@ -72,7 +68,8 @@ class Socket:
 			data = s.recvfrom(1024)
 			content = data[0]
 			addr = data[1]
-			print "content budur" + content
+			parse(content)
+			print content
 			Messenger.BroadcastMessage("incomingMessage", data)
 
 	def SendTo(self, ip, message):     
@@ -86,21 +83,6 @@ class Functions:
 	@staticmethod
 	def findContent(listenedData):
 		return listenedData[0]
-	
-	@staticmethod
-	def findContentOfMessage(rawData):
-		newData = rawData.split(' ')
-		if len(newData) < 2:
-			print "Invalid operator"
-		else :
-			Data = ' '.join(newData[2:])
-			return Data
-	
-	@staticmethod	
-	def findCommand(rawData):
-		result = rawData.split(' ')
-		command = result[0]
-		return command
 	
 	@staticmethod
 	def printMessage(data):
@@ -128,18 +110,6 @@ class Functions:
 		ip = page['ev']
 		print ip
 		return ip
-
-	@staticmethod
-	def backToJSON(rawData):
-		command = Functions.findCommand(rawData)
-		content = Functions.findContentOfMessage(rawData)
-
-		packet = Object()
-		packet.event = command
-		packet.subdata = Object()
-		packet.subdata.content = content
-
-		return packet.to_JSON()
 	
 	@staticmethod
 	def findUserByIP(ip):
@@ -148,6 +118,11 @@ class Functions:
 				return i
 		return False
 
+def parse(data):
+	j = json.loads(data)
+	print j['event']
+
+#Messenger.AddListener("incomingMessage", Functions.parse)
 Messenger.AddListener("waitingFriend", Functions.toUser)
 Messenger.AddListener("waitingFriend", Functions.ask)
 
